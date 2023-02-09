@@ -10,10 +10,10 @@ class Target:
 
     def __init__(self, file="target.json"):
         with open(file=file, mode="r") as f:
-            self.target = json.load(f)
+            self.rss = json.load(f)
 
 
 if __name__ == "__main__":
     target = Target()
-    for url in Target.rss.values():
+    for url in target.rss.values():
         r = requests.get(url=url)
