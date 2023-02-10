@@ -25,7 +25,11 @@ class Item:
     pubdate = datetime.fromtimestamp(0)
 
     def __init__(self, item):
-        pass
+        self.title = list(filter(lambda x: (x.tag == "title"), item))[0].text
+        self.link = list(filter(lambda x: (x.tag == "link"), item))[0].text
+        self.description = list(filter(lambda x: (x.tag == "description"), item))[0].text
+        self.guid = list(filter(lambda x: (x.tag == "description"), item))[0].text
+        self.pubdate = list(filter(lambda x: (x.tag == "pubDate"), item))[0].text
 
 
 if __name__ == "__main__":
@@ -41,3 +45,6 @@ if __name__ == "__main__":
                     rssitems.append(Item(item))
             else:
                 sys.stderr.write("invalid rss format\n")
+        for item in rssitems:
+            print(f"### {item.title}")
+            print(item.description)
