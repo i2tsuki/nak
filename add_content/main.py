@@ -45,6 +45,7 @@ if __name__ == "__main__":
                     rssitems.append(Item(item))
             else:
                 sys.stderr.write("invalid rss format\n")
+                sys.exit(1)
         for item in rssitems:
             print(f"### {item.title}")
             print(item.description)
