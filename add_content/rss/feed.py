@@ -17,4 +17,7 @@ class Item:
             0
         ].text
         self.guid = list(filter(lambda x: (x.tag == "description"), item))[0].text
-        self.pubdate = list(filter(lambda x: (x.tag == "pubDate"), item))[0].text
+        self.pubdate = datetime.strptime(
+            list(filter(lambda x: (x.tag == "pubDate"), item))[0].text,
+            "%a, %d %b %Y %H:%M:%S %z",
+        )
