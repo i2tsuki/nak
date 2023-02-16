@@ -4,9 +4,14 @@ from rss import Item
 
 from lxml import etree
 
+from datetime import date, datetime, timedelta
 import json
 import requests
 import sys
+
+
+# Parameter for output since how many day ago
+ago = 3
 
 
 # Target class represents the media lists that this script scrapes.
@@ -33,5 +38,9 @@ if __name__ == "__main__":
                 sys.stderr.write("invalid rss format\n")
                 sys.exit(1)
         for item in rssitems:
-            print(f"### [{item.title}]({item.link})")
-            print(item.description)
+            now = datetime.combine(date.today(), datetime.min.time()) - timedelta(
+                days=ago
+            )
+            if item.pubdate.timestamp() > now.timestamp():
+                print(f"### [{item.title}]({item.link})")
+                print(item.description)
