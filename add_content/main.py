@@ -12,10 +12,6 @@ import requests
 import sys
 
 
-# Parameter for output since how many day ago
-ago: int = 3
-
-
 # Target class represents the media lists that this script scrapes.
 class Target:
     rss: Dict[str, str] = {}
@@ -25,7 +21,7 @@ class Target:
             self.rss = json.load(f)
 
 
-def print_rss_items(tree: Iterable[etree._Element]):
+def print_rss_items(tree: Iterable[etree._Element], ago=3):
     for channel in tree:
         if channel.tag == "channel":
             items: Iterator = filter(lambda x: (x.tag == "item"), channel)
@@ -56,9 +52,21 @@ if __name__ == "__main__":
         metavar="--select",
         nargs=1,
         required=False,
-        default="",
+        default=[""],
+    )
+    # Parameter for output since how many day ago
+    parser.add_argument(
+        "--from-days",
+        action="store",
+        dest="from_days",
+        help="Output since how many days ago",
+        metavar="--from-days",
+        nargs=1,
+        required=False,
+        default=[3],
     )
     args: argparse.Namespace = parser.parse_args()
+    args.from_days: int = int(args.from_days[0])
 
     target = Target()
     if args.select[0] == "":
@@ -67,10 +75,10 @@ if __name__ == "__main__":
             rssitems: List[Item] = []
             resp: requests.Response = requests.get(url=url)
             tree: Iterable[etree._Element] = etree.fromstring(resp.content)
-            print_rss_items(tree=tree)
+            print_rss_items(tree=tree, ago=args.from_days)
     else:
         url: str = target.rss[args.select[0]]
         rssitems: List[Item] = []
         resp: requests.Response = requests.get(url=url)
         tree: Iterable[etree._Element] = etree.fromstring(resp.content)
-        print_rss_items(tree=tree)
+        print_rss_items(tree=tree, ago=args.from_days)
