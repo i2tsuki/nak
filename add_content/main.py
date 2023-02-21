@@ -49,7 +49,7 @@ def print_rss_items(
             print(item.description)
             if title not in marker:
                 marker[title] = {}
-            marker[title][item.title] = {"checked": True}
+            marker[title][item.title] = {}
 
     return marker
 
