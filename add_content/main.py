@@ -40,16 +40,18 @@ def print_rss_items(
             sys.stderr.write("invalid rss format\n")
             sys.exit(1)
 
+    if title not in marker:
+        marker[title] = {}
+
     for item in rssitems:
         now: datetime = datetime.combine(date.today(), datetime.min.time()) - timedelta(
             days=ago
         )
         if item.pubdate.timestamp() > now.timestamp():
-            print(f"### [{item.title}]({item.link})")
-            print(item.description)
-            if title not in marker:
-                marker[title] = {}
-            marker[title][item.title] = {}
+            if item.title not in marker[title]:
+                print(f"### [{item.title}]({item.link})")
+                print(item.description)
+                marker[title][item.title] = {}
 
     return marker
 
@@ -83,7 +85,8 @@ if __name__ == "__main__":
     args: argparse.Namespace = parser.parse_args()
     args.from_days: int = int(args.from_days[0])
 
-    marker = {}
+    with open(file="marker.json", mode="r") as f:
+        marker = json.load(f)
 
     target = Target()
     if args.select[0] == "":
