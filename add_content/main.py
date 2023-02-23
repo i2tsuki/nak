@@ -49,7 +49,7 @@ def print_rss_items(
         )
         if item.pubdate.timestamp() > now.timestamp():
             if item.title not in marker[title]:
-                print(f"### [{item.title}]({item.link})")
+                print(f"[{item.title}]({item.link})")
                 print(item.description)
                 marker[title][item.title] = {}
 
