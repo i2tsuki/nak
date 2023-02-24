@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 from rss import Item
+from marker import Marker
 
 from lxml import etree
 
@@ -44,10 +45,10 @@ def print_rss_items(
         marker[title] = {}
 
     for item in rssitems:
-        now: datetime = datetime.combine(date.today(), datetime.min.time()) - timedelta(
-            days=ago
-        )
-        if item.pubdate.timestamp() > now.timestamp():
+        start: datetime = datetime.combine(
+            date.today(), datetime.min.time()
+        ) - timedelta(days=ago)
+        if item.pubdate.timestamp() > start.timestamp():
             if item.title not in marker[title]:
                 print(f"[{item.title}]({item.link})")
                 print(item.description)
@@ -85,8 +86,7 @@ if __name__ == "__main__":
     args: argparse.Namespace = parser.parse_args()
     args.from_days: int = int(args.from_days[0])
 
-    with open(file="marker.json", mode="r") as f:
-        marker = json.load(f)
+    marker: Marker = Marker(file="marker.json")
 
     target = Target()
     if args.select[0] == "":
@@ -95,13 +95,12 @@ if __name__ == "__main__":
             rssitems: List[Item] = []
             resp: requests.Response = requests.get(url=url)
             tree: Iterable[etree._Element] = etree.fromstring(resp.content)
-            print_rss_items(tree=tree, marker=marker, ago=args.from_days)
+            print_rss_items(tree=tree, marker=marker.obj, ago=args.from_days)
     else:
         url: str = target.rss[args.select[0]]
         rssitems: List[Item] = []
         resp: requests.Response = requests.get(url=url)
         tree: Iterable[etree._Element] = etree.fromstring(resp.content)
-        print_rss_items(tree=tree, marker=marker, ago=args.from_days)
+        print_rss_items(tree=tree, marker=marker.obj, ago=args.from_days)
 
-    with open(file="marker.json", mode="w") as f:
-        json.dump(obj=marker, fp=f)
+    marker.update()
