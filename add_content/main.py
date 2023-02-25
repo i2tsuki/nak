@@ -23,7 +23,7 @@ class Target:
 
 
 def print_rss_items(
-    tree: Iterable[etree._Element] = None, marker: Dict[str, Any] = {}, ago: int = 3
+    tree: Iterable[etree._Element] = None, marker: Marker = None, ago: int = 3
 ) -> Dict[str, Any]:
     for channel in tree:
         if channel.tag == "channel":
@@ -41,20 +41,20 @@ def print_rss_items(
             sys.stderr.write("invalid rss format\n")
             sys.exit(1)
 
-    if title not in marker:
-        marker[title] = {}
+    if title not in marker.obj:
+        marker.obj[title] = {}
 
     for item in rssitems:
         start: datetime = datetime.combine(
             date.today(), datetime.min.time()
         ) - timedelta(days=ago)
         if item.pubdate.timestamp() > start.timestamp():
-            if item.title not in marker[title]:
+            if item.title not in marker.obj[title]:
                 print(f"[{item.title}]({item.link})")
                 print(item.description)
-                marker[title][item.title] = {}
+                marker.obj[title][item.title] = {}
 
-    return marker
+    marker.update()
 
 
 if __name__ == "__main__":
@@ -95,12 +95,10 @@ if __name__ == "__main__":
             rssitems: List[Item] = []
             resp: requests.Response = requests.get(url=url)
             tree: Iterable[etree._Element] = etree.fromstring(resp.content)
-            print_rss_items(tree=tree, marker=marker.obj, ago=args.from_days)
+            print_rss_items(tree=tree, marker=marker, ago=args.from_days)
     else:
         url: str = target.rss[args.select[0]]
         rssitems: List[Item] = []
         resp: requests.Response = requests.get(url=url)
         tree: Iterable[etree._Element] = etree.fromstring(resp.content)
-        print_rss_items(tree=tree, marker=marker.obj, ago=args.from_days)
-
-    marker.update()
+        print_rss_items(tree=tree, marker=marker, ago=args.from_days)
