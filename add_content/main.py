@@ -25,6 +25,7 @@ class Target:
 def print_rss_items(
     tree: Iterable[etree._Element] = None, marker: Marker = None, ago: int = 3
 ) -> Dict[str, Any]:
+    rssitems: List[Item] = []
     for channel in tree:
         if channel.tag == "channel":
             if (
@@ -91,14 +92,12 @@ if __name__ == "__main__":
     target = Target()
     if args.select[0] == "":
         for feed in target.rss:
-            url: str = target.rss[feed]
-            rssitems: List[Item] = []
+            url: str = target.rss[feed]            
             resp: requests.Response = requests.get(url=url)
             tree: Iterable[etree._Element] = etree.fromstring(resp.content)
             print_rss_items(tree=tree, marker=marker, ago=args.from_days)
     else:
         url: str = target.rss[args.select[0]]
-        rssitems: List[Item] = []
         resp: requests.Response = requests.get(url=url)
         tree: Iterable[etree._Element] = etree.fromstring(resp.content)
         print_rss_items(tree=tree, marker=marker, ago=args.from_days)
