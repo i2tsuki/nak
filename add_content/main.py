@@ -5,7 +5,7 @@ from marker import Marker
 
 from lxml import etree
 
-from typing import Any, Dict, List, Iterator, Iterable
+from typing import Dict, List, Iterator, Iterable
 from datetime import date, datetime, timedelta
 import argparse
 import json
@@ -22,40 +22,41 @@ class Target:
             self.rss = json.load(f)
 
 
-def print_rss_items(
+def get_rss_articles(
     tree: Iterable[etree._Element] = None, marker: Marker = None, ago: int = 3
-) -> Dict[str, Any]:
-    rssitems: List[Item] = []
+) -> List[Item]:
+    articles: List[Item] = []
+
+    start: datetime = datetime.combine(date.today(), datetime.min.time()) - timedelta(
+        days=ago
+    )
+
     for channel in tree:
         if channel.tag == "channel":
             if (
                 title_element := list(filter(lambda x: (x.tag == "title"), channel))
             ) != []:
                 title: str = title_element[0].text
+                # When a title is not include in the `marker.obj` dict
+                if title not in marker.obj:
+                    marker.obj[title] = {}
             else:
                 sys.stderr.write("invalid rss format\n")
                 sys.exit(1)
             items: Iterator = filter(lambda x: (x.tag == "item"), channel)
-            for i in items:
-                rssitems.append(Item(i))
+            for item in items:
+                i: Item = Item(item)
+                if i.pubdate.timestamp() > start.timestamp() and (
+                    i.title not in marker.obj[title]
+                ):
+                    marker.obj[title][i.title] = {}
+                    articles.append(i)
         else:
             sys.stderr.write("invalid rss format\n")
             sys.exit(1)
 
-    if title not in marker.obj:
-        marker.obj[title] = {}
-
-    for item in rssitems:
-        start: datetime = datetime.combine(
-            date.today(), datetime.min.time()
-        ) - timedelta(days=ago)
-        if item.pubdate.timestamp() > start.timestamp():
-            if item.title not in marker.obj[title]:
-                print(f"[{item.title}]({item.link})")
-                print(item.description)
-                marker.obj[title][item.title] = {}
-
     marker.update()
+    return articles
 
 
 if __name__ == "__main__":
@@ -92,12 +93,24 @@ if __name__ == "__main__":
     target = Target()
     if args.select[0] == "":
         for feed in target.rss:
-            url: str = target.rss[feed]            
+            url: str = target.rss[feed]
             resp: requests.Response = requests.get(url=url)
             tree: Iterable[etree._Element] = etree.fromstring(resp.content)
-            print_rss_items(tree=tree, marker=marker, ago=args.from_days)
+            articles: List[Item] = get_rss_articles(
+                tree=tree, marker=marker, ago=args.from_days
+            )
+            for item in articles:
+                print(f"[{item.title}]({item.link})")
+                print(item.description)
+
     else:
         url: str = target.rss[args.select[0]]
         resp: requests.Response = requests.get(url=url)
         tree: Iterable[etree._Element] = etree.fromstring(resp.content)
-        print_rss_items(tree=tree, marker=marker, ago=args.from_days)
+        get_rss_articles(tree=tree, marker=marker, ago=args.from_days)
+        articles: List[Item] = get_rss_articles(
+            tree=tree, marker=marker, ago=args.from_days
+        )
+        for item in articles:
+            print(f"[{item.title}]({item.link})")
+            print(item.description)
