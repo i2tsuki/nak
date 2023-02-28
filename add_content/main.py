@@ -21,6 +21,10 @@ class Target:
         with open(file=file, mode="r") as f:
             self.rss = json.load(f)
 
+    def select(self, channel_title=""):
+        if channel_title != "":
+            self.rss = {channel_title: self.rss[channel_title]}
+
 
 def get_rss_articles(
     tree: Iterable[etree._Element] = None, marker: Marker = None, ago: int = 3
@@ -91,23 +95,10 @@ if __name__ == "__main__":
     marker: Marker = Marker(file="marker.json")
 
     target = Target()
-    if args.select[0] == "":
-        for feed in target.rss:
-            url: str = target.rss[feed]
-            resp: requests.Response = requests.get(url=url)
-            tree: Iterable[etree._Element] = etree.fromstring(resp.content)
-            articles: List[Item] = get_rss_articles(
-                tree=tree, marker=marker, ago=args.from_days
-            )
-            for item in articles:
-                print(f"[{item.title}]({item.link})")
-                print(item.description)
-
-    else:
-        url: str = target.rss[args.select[0]]
-        resp: requests.Response = requests.get(url=url)
+    target.select(channel_title=args.select[0])
+    for feed in target.rss:
+        resp: requests.Response = requests.get(url=target.rss[feed])
         tree: Iterable[etree._Element] = etree.fromstring(resp.content)
-        get_rss_articles(tree=tree, marker=marker, ago=args.from_days)
         articles: List[Item] = get_rss_articles(
             tree=tree, marker=marker, ago=args.from_days
         )
