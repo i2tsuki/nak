@@ -95,6 +95,7 @@ if __name__ == "__main__":
     marker: Marker = Marker(file="marker.json")
 
     target = Target()
+    rss_articles: List[Item] = []
     target.select(channel_title=args.select[0])
     for feed in target.rss:
         resp: requests.Response = requests.get(url=target.rss[feed])
@@ -102,6 +103,8 @@ if __name__ == "__main__":
         articles: List[Item] = get_rss_articles(
             tree=tree, marker=marker, ago=args.from_days
         )
-        for item in articles:
-            print(f"[{item.title}]({item.link})")
-            print(item.description)
+        rss_articles.extend(articles)
+
+    for item in rss_articles:
+        print(f"[{item.title}]({item.link})")
+        print(item.description)
