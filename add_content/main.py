@@ -4,11 +4,13 @@ from rss import Item
 from marker import Marker
 
 from lxml import etree
+from pytion import Notion
 
 from typing import Dict, List, Iterator, Iterable
 from datetime import date, datetime, timedelta
 import argparse
 import json
+import os
 import requests
 import sys
 
@@ -64,6 +66,8 @@ def get_rss_articles(
 
 
 if __name__ == "__main__":
+    no = Notion(token=os.environ["NOTION_TOKEN"])
+
     parser: argparse.ArgumentParser = argparse.ArgumentParser(
         prog="rssnotion",
         description="Add RSS Feed content to Notion.",
