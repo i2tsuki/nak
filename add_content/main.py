@@ -21,7 +21,8 @@ class Target:
 
     def __init__(self, file="target.json"):
         with open(file=file, mode="r") as f:
-            self.rss = json.load(f)
+            target = json.load(f)
+            self.rss = target["RSS Feed"]
 
     def select(self, channel_title=""):
         if channel_title != "":
