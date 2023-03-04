@@ -66,9 +66,7 @@ def get_rss_articles(
     return articles
 
 
-if __name__ == "__main__":
-    no = Notion(token=os.environ["NOTION_TOKEN"])
-
+def parse_args() -> argparse.Namespace:
     parser: argparse.ArgumentParser = argparse.ArgumentParser(
         prog="rssnotion",
         description="Add RSS Feed content to Notion.",
@@ -96,7 +94,13 @@ if __name__ == "__main__":
     )
     args: argparse.Namespace = parser.parse_args()
     args.from_days: int = int(args.from_days[0])
+    return args
 
+
+def main():
+    no = Notion(token=os.environ["NOTION_TOKEN"])
+
+    args: argparse.Namespace = parse_args()
     marker: Marker = Marker(file="marker.json")
 
     target = Target()
@@ -113,3 +117,7 @@ if __name__ == "__main__":
     for item in rss_articles:
         print(f"[{item.title}]({item.link})")
         print(item.description)
+
+
+if __name__ == "__main__":
+    main()
