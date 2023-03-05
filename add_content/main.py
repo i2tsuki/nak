@@ -22,7 +22,8 @@ class Target:
     def __init__(self, file="target.json"):
         with open(file=file, mode="r") as f:
             target = json.load(f)
-            self.rss = target["RSS Feed"]
+            self.rss: Dict[str, str] = target["RSS Feed"]
+            self.page_id: str = target["Notion"]["Page ID"]
 
     def select(self, channel_title=""):
         if channel_title != "":
@@ -30,7 +31,7 @@ class Target:
 
 
 def get_rss_articles(
-    tree: Iterable[etree._Element] = None, marker: Marker = None, ago: int = 3
+    tree: Iterable[etree._Element] = iter([]), marker: Marker = Marker(), ago: int = 3
 ) -> List[Item]:
     articles: List[Item] = []
 
@@ -43,7 +44,7 @@ def get_rss_articles(
             if (
                 title_element := list(filter(lambda x: (x.tag == "title"), channel))
             ) != []:
-                title: str = title_element[0].text
+                title: str = title_element[0].text or ""
                 # When a title is not include in the `marker.obj` dict
                 if title not in marker.obj:
                     marker.obj[title] = {}
@@ -93,17 +94,18 @@ def parse_args() -> argparse.Namespace:
         default=[3],
     )
     args: argparse.Namespace = parser.parse_args()
-    args.from_days: int = int(args.from_days[0])
+    args.from_days = int(args.from_days[0])
     return args
 
 
 def main():
-    no = Notion(token=os.environ["NOTION_TOKEN"])
-
     args: argparse.Namespace = parse_args()
+    target = Target()
     marker: Marker = Marker(file="marker.json")
 
-    target = Target()
+    no = Notion(token=os.environ["NOTION_TOKEN"])
+    no.pages.get(target.page_id)
+
     rss_articles: List[Item] = []
     target.select(channel_title=args.select[0])
     for feed in target.rss:
