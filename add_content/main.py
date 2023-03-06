@@ -31,13 +31,17 @@ class Target:
 
 
 def get_rss_articles(
-    tree: Iterable[etree._Element] = iter([]), marker: Marker = Marker(), ago: int = 3
+    tree: Iterable[etree._Element] = iter([]),
+    marker_file: str = "marker.json",
+    ago: int = 3,
 ) -> List[Item]:
     articles: List[Item] = []
 
     start: datetime = datetime.combine(date.today(), datetime.min.time()) - timedelta(
         days=ago
     )
+
+    marker: Marker = Marker(file=marker_file)
 
     for channel in tree:
         if channel.tag == "channel":
@@ -101,7 +105,6 @@ def parse_args() -> argparse.Namespace:
 def main():
     args: argparse.Namespace = parse_args()
     target = Target()
-    marker: Marker = Marker(file="marker.json")
 
     no = Notion(token=os.environ["NOTION_TOKEN"])
     no.pages.get(target.page_id)
@@ -112,7 +115,7 @@ def main():
         resp: requests.Response = requests.get(url=target.rss[feed])
         tree: Iterable[etree._Element] = etree.fromstring(resp.content)
         articles: List[Item] = get_rss_articles(
-            tree=tree, marker=marker, ago=args.from_days
+            tree=tree, marker_file="marker.json", ago=args.from_days
         )
         rss_articles.extend(articles)
 
