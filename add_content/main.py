@@ -5,6 +5,7 @@ from marker import Marker
 
 from lxml import etree
 from pytion import Notion
+from pytion.models import Page, Block, RichText, RichTextArray
 
 from typing import Dict, List, Iterator, Iterable
 from datetime import date, datetime, timedelta
@@ -13,6 +14,25 @@ import json
 import os
 import requests
 import sys
+
+
+# Override RichText.get()
+def rich_text_get(self):
+    """
+    Text type supported only
+    """
+    link = None
+    if self.href:
+        link = {"url": self.href}
+    return {
+        "type": "text",
+        "text": {"content": self.plain_text, "link": link},
+        # "annotations": self.annotations,
+        # "plain_text": self.plain_text,
+    }
+
+
+RichText.get = rich_text_get
 
 
 # Target class represents the media lists that this script scrapes.
@@ -106,8 +126,8 @@ def main():
     args: argparse.Namespace = parse_args()
     target = Target()
 
-    no = Notion(token=os.environ["NOTION_TOKEN"])
-    no.pages.get(target.page_id)
+    no: Notion = Notion(token=os.environ["NOTION_TOKEN"])
+    page: Page = no.pages.get(target.page_id)
 
     rss_articles: List[Item] = []
     target.select(channel_title=args.select[0])
@@ -120,6 +140,12 @@ def main():
         rss_articles.extend(articles)
 
     for item in rss_articles:
+        array: List[Dict[str, str]] = [
+            {"type": "plain_text", "plain_text": item.title, "href": item.link},
+            {"type": "plain_text", "plain_text": "\n"},
+            {"type": "plain_text", "plain_text": item.description},
+        ]
+        page.block_append(blocks=[Block.create(RichTextArray(array))])
         print(f"[{item.title}]({item.link})")
         print(item.description)
 
