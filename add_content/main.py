@@ -57,17 +57,13 @@ def get_rss_articles(
 ) -> List[Item]:
     articles: List[Item] = []
 
-    start: datetime = datetime.combine(date.today(), datetime.min.time()) - timedelta(
-        days=ago
-    )
+    start: datetime = datetime.combine(date.today(), datetime.min.time()) - timedelta(days=ago)
 
     marker: Marker = Marker(file=marker_file)
 
     for channel in tree:
         if channel.tag == "channel":
-            if (
-                title_element := list(filter(lambda x: (x.tag == "title"), channel))
-            ) != []:
+            if (title_element := list(filter(lambda x: (x.tag == "title"), channel))) != []:
                 title: str = title_element[0].text or ""
                 # When a title is not include in the `marker.obj` dict
                 if title not in marker.obj:
@@ -78,9 +74,7 @@ def get_rss_articles(
             items: Iterator = filter(lambda x: (x.tag == "item"), channel)
             for item in items:
                 i: Item = Item(item)
-                if i.pubdate.timestamp() > start.timestamp() and (
-                    i.title not in marker.obj[title]
-                ):
+                if i.pubdate.timestamp() > start.timestamp() and (i.title not in marker.obj[title]):
                     marker.obj[title][i.title] = {}
                     articles.append(i)
         else:
