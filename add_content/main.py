@@ -21,14 +21,17 @@ def rich_text_get(self):
     """
     Text type supported only
     """
+    href = None
     link = None
     if self.href:
         link = {"url": self.href}
+        href = self.href
     return {
         "type": "text",
         "text": {"content": self.plain_text, "link": link},
         # "annotations": self.annotations,
         # "plain_text": self.plain_text,
+        "href": href,
     }
 
 
