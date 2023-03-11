@@ -120,6 +120,7 @@ def parse_args() -> argparse.Namespace:
 
 
 def main():
+    now = datetime.now()
     args: argparse.Namespace = parse_args()
     target = Target()
 
@@ -135,6 +136,15 @@ def main():
             tree=tree, marker_file="marker.json", ago=args.from_days
         )
         rss_articles.extend(articles)
+
+    print(f"Last updated: {now:%Y-%m-%d %H:%M:%S}")
+    page.block_append(
+        block=Block.create(
+            RichTextArray(
+                [{"type": "plain_text", "plain_text": f"Last updated: {now:%Y-%m-%d %H:%M:%S}"}]
+            )
+        )
+    )
 
     for item in rss_articles:
         array: List[Dict[str, str]] = [
