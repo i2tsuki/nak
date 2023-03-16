@@ -117,17 +117,18 @@ def parse_args() -> argparse.Namespace:
 
 
 def main():
-    now = datetime.now()
+    now: datetime.Datetime = datetime.now()
     marker = Marker(file="marker.json")
     
     args: argparse.Namespace = parse_args()
-    target = Target()
+    target: Target = Target()
 
     no: Notion = Notion(token=os.environ["NOTION_TOKEN"])
     page: Page = no.pages.get(target.page_id)
 
     rss_articles: List[Item] = []
     target.select(channel_title=args.select[0])
+
     for feed in target.rss:
         resp: requests.Response = requests.get(url=target.rss[feed])
         tree: Iterable[etree._Element] = etree.fromstring(resp.content)
@@ -135,6 +136,10 @@ def main():
             tree=tree, marker=marker, ago=args.from_days
         )
         rss_articles.extend(articles)
+
+    no_mixed: bool = False
+    if not no_mixed:
+        rss_articles = sorted(rss_articles, key=lambda x: x.pubdate)
 
     print(f"Last updated: {now:%Y-%m-%d %H:%M:%S}")
     page.block_append(
