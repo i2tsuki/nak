@@ -35,7 +35,7 @@ class Item:
         self.pubdate = datetime.strptime(
             list(filter(lambda x: (x.tag == "pubDate"), item))[0].text,
             "%a, %d %b %Y %H:%M:%S %z",
-        )
+        ).astimezone()
         self.media = (
             None if (x := list(filter(lambda x: (x.tag == mediatag), item))) == [] else Media(x[0])
         )
