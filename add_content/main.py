@@ -119,7 +119,7 @@ def parse_args() -> argparse.Namespace:
 def main():
     now: datetime.Datetime = datetime.now()
     marker = Marker(file="marker.json")
-    
+
     args: argparse.Namespace = parse_args()
     target: Target = Target()
 
@@ -132,9 +132,7 @@ def main():
     for feed in target.rss:
         resp: requests.Response = requests.get(url=target.rss[feed])
         tree: Iterable[etree._Element] = etree.fromstring(resp.content)
-        articles: List[Item] = get_rss_articles(
-            tree=tree, marker=marker, ago=args.from_days
-        )
+        articles: List[Item] = get_rss_articles(tree=tree, marker=marker, ago=args.from_days)
         rss_articles.extend(articles)
 
     no_mixed: bool = False
@@ -142,15 +140,17 @@ def main():
         rss_articles = sorted(rss_articles, key=lambda x: x.pubdate)
 
     print(f"Last updated: {now:%Y-%m-%d %H:%M:%S}")
-    page.block_append(
-        block=Block.create(
-            RichTextArray(
-                [{"type": "plain_text", "plain_text": f"Last updated: {now:%Y-%m-%d %H:%M:%S}"}]
+    blocks: List[Block] = []
+    blocks.extend(
+        [
+            Block.create(
+                RichTextArray(
+                    [{"type": "plain_text", "plain_text": f"Last updated: {now:%Y-%m-%d %H:%M:%S}"}]
+                )
             )
-        )
+        ]
     )
 
-    blocks: List[Block] = []
     for item in rss_articles:
         print(f"[{item.title}]({item.link})")
         print(item.description)
@@ -163,6 +163,7 @@ def main():
     page.block_append(blocks=blocks)
 
     marker.update()
+
 
 if __name__ == "__main__":
     main()
