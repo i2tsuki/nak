@@ -111,6 +111,13 @@ def parse_args() -> argparse.Namespace:
         required=False,
         default=[3],
     )
+    parser.add_argument(
+        "--no-mixed",
+        action="store_true",
+        help="Do not mix articles for each RSS feed",
+        dest="no_mixed",
+        default=False,
+    )
     args: argparse.Namespace = parser.parse_args()
     args.from_days = int(args.from_days[0])
     return args
@@ -134,9 +141,8 @@ def main():
         tree: Iterable[etree._Element] = etree.fromstring(resp.content)
         articles: List[Item] = get_rss_articles(tree=tree, marker=marker, ago=args.from_days)
         rss_articles.extend(articles)
-
-    no_mixed: bool = False
-    if not no_mixed:
+    
+    if not args.no_mixed:
         rss_articles = sorted(rss_articles, key=lambda x: x.pubdate)
 
     print(f"Last updated: {now:%Y-%m-%d %H:%M:%S}")
