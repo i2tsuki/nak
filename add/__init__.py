@@ -7,9 +7,10 @@ from lxml import etree
 from pytion import Notion
 from pytion.models import Page, Block, RichText, RichTextArray
 
+import click
+
 from typing import Dict, List, Iterator, Iterable
 from datetime import date, datetime, timedelta
-import argparse
 import json
 import os
 import requests
@@ -85,64 +86,46 @@ def get_rss_articles(
     return articles
 
 
-def parse_args() -> argparse.Namespace:
-    parser: argparse.ArgumentParser = argparse.ArgumentParser(
-        prog="rssnotion",
-        description="Add RSS Feed content to Notion.",
-    )
-    parser.add_argument(
-        "--select",
-        action="store",
-        dest="select",
-        help="RSS feed selector",
-        metavar="--select",
-        nargs=1,
-        required=False,
-        default=[""],
-    )
-    # Parameter for output since how many day ago
-    parser.add_argument(
-        "--from-days",
-        action="store",
-        dest="from_days",
-        help="Output since how many days ago",
-        metavar="--from-days",
-        nargs=1,
-        required=False,
-        default=[3],
-    )
-    parser.add_argument(
-        "--no-mixed",
-        action="store_true",
-        help="Do not mix articles for each RSS feed",
-        dest="no_mixed",
-        default=False,
-    )
-    args: argparse.Namespace = parser.parse_args()
-    args.from_days = int(args.from_days[0])
-    return args
-
-
-def main():
+@click.command()
+@click.option("--select", nargs=1, default="", required=False, type=str, help="Select RSS Feed.")
+# Parameter for output since how many day ago
+@click.option(
+    "--from-days",
+    nargs=1,
+    default=3,
+    required=False,
+    type=int,
+    help="Output since how many days ago.",
+)
+# Not mix each RSS feed or not
+@click.option(
+    "--no-mixed",
+    is_flag=True,
+    default=False,
+    required=False,
+    type=bool,
+    help="Do not mix articles for each RSS feed.",
+)
+def add(select, from_days, no_mixed):
+    """Add RSS Feed content to Notion."""
     now: datetime.Datetime = datetime.now()
     marker = Marker(file="marker.json")
 
-    args: argparse.Namespace = parse_args()
     target: Target = Target()
 
     no: Notion = Notion(token=os.environ["NOTION_TOKEN"])
     page: Page = no.pages.get(target.page_id)
 
     rss_articles: List[Item] = []
-    target.select(channel_title=args.select[0])
+    target.select(channel_title=select)
 
     for feed in target.rss:
         resp: requests.Response = requests.get(url=target.rss[feed])
         tree: Iterable[etree._Element] = etree.fromstring(resp.content)
-        articles: List[Item] = get_rss_articles(tree=tree, marker=marker, ago=args.from_days)
+        articles: List[Item] = get_rss_articles(tree=tree, marker=marker, ago=from_days)
         rss_articles.extend(articles)
-    
-    if not args.no_mixed:
+
+    if not no_mixed:
         rss_articles = sorted(rss_articles, key=lambda x: x.pubdate)
 
     print(f"Last updated: {now:%Y-%m-%d %H:%M:%S}")
@@ -172,4 +155,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    add()
