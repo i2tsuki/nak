@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
-from rss import Item
-from marker import Marker
+from .rss import Item
+from .marker import Marker
 
 from lxml import etree
 from pytion import Notion
