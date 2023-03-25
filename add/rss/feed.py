@@ -25,7 +25,7 @@ class Item:
     pubdate: datetime = datetime.fromtimestamp(0)
     media: Optional[Media] = None
 
-    def __init__(self, item, mediatag=""):
+    def __init__(self, item, mediatag="{http://search.yahoo.com/mrss/}content"):
         # fmt: off
         self.title = "" if (x := list(filter(lambda x: (x.tag == "title"), item))) == [] else x[0].text  # noqa
         self.link = "" if (x := list(filter(lambda x: (x.tag == "link"), item))) == [] else x[0].text  # noqa
