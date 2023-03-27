@@ -211,7 +211,7 @@ def add(select, from_days, no_mixed):
                     "caption": [
                         {
                             "type": "text",
-                            "text": {"content": item.title, "link": None},
+                            "text": {"content": item.title, "link": {"url": item.link}},
                             "plain_text": item.title,
                             "href": item.link,
                         }
