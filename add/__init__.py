@@ -222,7 +222,6 @@ def add(select, from_days, no_mixed):
             )
             blocks.extend([b])
         array: List[Dict[str, str]] = [
-            {"type": "plain_text", "plain_text": "\n"},
             {"type": "plain_text", "plain_text": item.description},
         ]
         blocks.extend([Block.create(RichTextArray(array))])
