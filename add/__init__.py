@@ -86,7 +86,7 @@ def get_rss_articles(
     return articles
 
 
-def get(self, with_object_type: bool = False):  # noqa
+def block_get(self, with_object_type: bool = False):  # noqa
     if self.type in [
         "paragraph",
         "quote",
@@ -140,7 +140,7 @@ def get(self, with_object_type: bool = False):  # noqa
     return None
 
 
-Block.get = get
+Block.get = block_get
 
 
 @click.command()
