@@ -9,7 +9,7 @@ from pytion.models import Page, Block, RichText, RichTextArray, LinkTo
 
 import click
 
-from typing import Dict, List, Iterator, Iterable
+from typing import Any, Dict, List, Iterator, Iterable
 from datetime import date, datetime, timedelta
 import json
 import os
@@ -59,7 +59,7 @@ def block_get(self, with_object_type: bool = False):  # noqa
         text = RichTextArray.create(self.text) if isinstance(self.text, str) else self.text
 
         # base content
-        new_dict = {self.type: {"rich_text": text.get()}}
+        new_dict: Dict[str, Any] = {self.type: {"rich_text": text.get()}}
 
         # to_do type attrs
         if self.type == "to_do" and hasattr(self, "checked"):
