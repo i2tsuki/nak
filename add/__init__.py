@@ -39,53 +39,7 @@ def rich_text_get(self):
 RichText.get = rich_text_get
 
 
-# Target class represents the media lists that this script scrapes.
-class Target:
-    rss: Dict[str, str] = {}
-
-    def __init__(self, file="target.json"):
-        with open(file=file, mode="r") as f:
-            target = json.load(f)
-            self.rss: Dict[str, str] = target["RSS Feed"]
-            self.page_id: str = target["Notion"]["Page ID"]
-
-    def select(self, channel_title=""):
-        if channel_title != "":
-            self.rss = {channel_title: self.rss[channel_title]}
-
-
-def get_rss_articles(
-    tree: Iterable[etree._Element] = iter([]),
-    marker: Marker = Marker(),
-    ago: int = 3,
-) -> List[Item]:
-    articles: List[Item] = []
-
-    start: datetime = datetime.combine(date.today(), datetime.min.time()) - timedelta(days=ago)
-
-    for channel in tree:
-        if channel.tag == "channel":
-            if (title_element := list(filter(lambda x: (x.tag == "title"), channel))) != []:
-                title: str = title_element[0].text or ""
-                # When a title is not include in the `marker.obj` dict
-                if title not in marker.obj:
-                    marker.obj[title] = {}
-            else:
-                sys.stderr.write("invalid rss format\n")
-                sys.exit(1)
-            items: Iterator = filter(lambda x: (x.tag == "item"), channel)
-            for item in items:
-                i: Item = Item(item)
-                if i.pubdate.timestamp() > start.timestamp() and (i.title not in marker.obj[title]):
-                    marker.obj[title][i.title] = {}
-                    articles.append(i)
-        else:
-            sys.stderr.write("invalid rss format\n")
-            sys.exit(1)
-
-    return articles
-
-
+# Override Block.get()
 def block_get(self, with_object_type: bool = False):  # noqa
     if self.type in [
         "paragraph",
@@ -141,6 +95,53 @@ def block_get(self, with_object_type: bool = False):  # noqa
 
 
 Block.get = block_get
+
+
+# Target class represents the media lists that this script scrapes.
+class Target:
+    rss: Dict[str, str] = {}
+
+    def __init__(self, file="target.json"):
+        with open(file=file, mode="r") as f:
+            target = json.load(f)
+            self.rss: Dict[str, str] = target["RSS Feed"]
+            self.page_id: str = target["Notion"]["Page ID"]
+
+    def select(self, channel_title=""):
+        if channel_title != "":
+            self.rss = {channel_title: self.rss[channel_title]}
+
+
+def get_rss_articles(
+    tree: Iterable[etree._Element] = iter([]),
+    marker: Marker = Marker(),
+    ago: int = 3,
+) -> List[Item]:
+    articles: List[Item] = []
+
+    start: datetime = datetime.combine(date.today(), datetime.min.time()) - timedelta(days=ago)
+
+    for channel in tree:
+        if channel.tag == "channel":
+            if (title_element := list(filter(lambda x: (x.tag == "title"), channel))) != []:
+                title: str = title_element[0].text or ""
+                # When a title is not include in the `marker.obj` dict
+                if title not in marker.obj:
+                    marker.obj[title] = {}
+            else:
+                sys.stderr.write("invalid rss format\n")
+                sys.exit(1)
+            items: Iterator = filter(lambda x: (x.tag == "item"), channel)
+            for item in items:
+                i: Item = Item(item)
+                if i.pubdate.timestamp() > start.timestamp() and (i.title not in marker.obj[title]):
+                    marker.obj[title][i.title] = {}
+                    articles.append(i)
+        else:
+            sys.stderr.write("invalid rss format\n")
+            sys.exit(1)
+
+    return articles
 
 
 @click.command()
@@ -204,7 +205,7 @@ def add(select, from_days, no_mixed):
             print(f"([{item.media.contenturl}]{item.media.contenturl})")
 
         if item.media and item.media.contenttype.startswith("image"):
-            b = Block(
+            b: Block = Block(
                 type="image",
                 parent=LinkTo(),
                 image={
