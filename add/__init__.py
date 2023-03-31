@@ -221,11 +221,21 @@ def add(select, from_days, no_mixed):
                     "external": {"url": item.media.contenturl},
                 },
             )
-            blocks.extend([b])
-        array: List[Dict[str, str]] = [
-            {"type": "plain_text", "plain_text": item.description},
-        ]
-        blocks.extend([Block.create(RichTextArray(array))])
+            blocks.extend(
+                [
+                    b,
+                    Block.create(
+                        RichTextArray([{"type": "plain_text", "plain_text": item.description}])
+                    ),
+                ]
+            )
+        else:
+            array: List[Dict[str, str]] = [
+                {"type": "plain_text", "plain_text": item.title, "href": item.link},
+                {"type": "plain_text", "plain_text": "\n"},
+                {"type": "plain_text", "plain_text": item.description},
+            ]
+            blocks.extend([Block.create(RichTextArray(array))])
     page.block_append(blocks=blocks)
 
     marker.update()
