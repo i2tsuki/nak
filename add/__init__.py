@@ -18,7 +18,7 @@ import sys
 
 
 # Override RichText.get()
-def rich_text_get(self):
+def rich_text_get(self) -> Dict[str, Any]:
     """
     Text type supported only
     """
@@ -166,7 +166,7 @@ def get_rss_articles(
 )
 def add(select, from_days, no_mixed):
     """Add RSS Feed content to Notion."""
-    now: datetime.Datetime = datetime.now()
+    now: datetime = datetime.now()
     marker = Marker(file="marker.json")
 
     target: Target = Target()
