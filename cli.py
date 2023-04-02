@@ -4,6 +4,7 @@ import click
 from pytion import setup_logging
 
 from add import add
+from wc import wc
 
 
 @click.group()
@@ -16,6 +17,7 @@ def cli(debug):
 
 
 cli.add_command(add)
+cli.add_command(wc)
 
 if __name__ == "__main__":
     cli()
