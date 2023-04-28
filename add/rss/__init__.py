@@ -34,7 +34,7 @@ class Target:
 def get_rss_articles(
     tree: Iterable[etree._Element] = iter([]),
     marker: Marker = Marker(),
-    ago: int = 3,
+    ago: int = 0,
 ) -> List[Item]:
     articles: List[Item] = []
 
@@ -82,7 +82,23 @@ def get_rss_articles(
     type=bool,
     help="Do not mix articles for each RSS feed.",
 )
-def rss(select, from_days, no_mixed):
+@click.option(
+    "--no-catch-up",
+    is_flag=True,
+    default=False,
+    required=False,
+    type=bool,
+    help="Do not show catch-up images."
+)
+@click.option(
+    "--items",
+    nargs=1,
+    default=20,
+    required=False,
+    type=int,
+    help="Number of the output items."
+)
+def rss(select, from_days, no_mixed, no_catch_up):
     """Add RSS Feed content to Notion."""
     now: datetime = datetime.now()
     marker = Marker(file="marker.json")
@@ -92,16 +108,13 @@ def rss(select, from_days, no_mixed):
     no: Notion = Notion(token=os.environ["NOTION_TOKEN"])
     page: Page = no.pages.get(target.page_id)
 
-    rss_articles: List[Item] = []
+    articles: List[Item] = []
     target.select(channel_title=select)
 
     for feed in target.rss:
         resp: requests.Response = requests.get(url=target.rss[feed])
         tree: Iterable[etree._Element] = etree.fromstring(resp.content)
-        articles: List[Item] = get_rss_articles(tree=tree, marker=marker, ago=from_days)
-        rss_articles.extend(articles)
-
-    if not no_mixed:
+        articles.extend(get_rss_articles(tree=tree, marker=marker, ago=from_days))
         rss_articles = sorted(rss_articles, key=lambda x: x.pubdate)
 
     print(f"Last updated: {now:%Y-%m-%d %H:%M:%S}")
@@ -116,13 +129,13 @@ def rss(select, from_days, no_mixed):
         ]
     )
 
-    for item in rss_articles:
+    for item in articles:
         print(f"[{item.title}]({item.link})")
         print(item.description)
         if item.media and item.media.contenttype.startswith("image"):
             print(f"([{item.media.contenturl}]{item.media.contenturl})")
 
-        if item.media and item.media.contenttype.startswith("image"):
+        if not no_catch_up and item.media and item.media.contenttype.startswith("image"):
             b: Block = Block(
                 type="image",
                 parent=LinkTo(),
