@@ -62,6 +62,7 @@ def get_rss_articles(
 
     return articles
 
+
 @click.command()
 @click.option("--select", nargs=1, default="", required=False, type=str, help="Select RSS Feed.")
 # Parameter for output since how many day ago
@@ -114,8 +115,14 @@ def rss(select, from_days, no_mixed, no_catch_up):
     for feed in target.rss:
         resp: requests.Response = requests.get(url=target.rss[feed])
         tree: Iterable[etree._Element] = etree.fromstring(resp.content)
-        articles.extend(get_rss_articles(tree=tree, marker=marker, ago=from_days))
-        rss_articles = sorted(rss_articles, key=lambda x: x.pubdate)
+        articles.extend(
+            sorted(
+                get_rss_articles(tree=tree, marker=marker, ago=from_days),
+                key=lambda x: x.pubdate,
+            )
+        )
+    if not no_mixed:        
+        articles = sorted(articles, key=lambda x: x.pubdate)           
 
     print(f"Last updated: {now:%Y-%m-%d %H:%M:%S}")
     blocks: List[Block] = []
