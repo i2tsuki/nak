@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 from datetime import datetime
-from typing import Optional
+from typing import Optional, Dict
 
 
 class Media:
@@ -24,6 +24,7 @@ class Item:
     guid: str = ""
     pubdate: datetime = datetime.fromtimestamp(0)
     media: Optional[Media] = None
+    metadata: Dict = {}
 
     def __init__(self, item, mediatag="{http://search.yahoo.com/mrss/}content"):
         # fmt: off
@@ -39,3 +40,4 @@ class Item:
         self.media = (
             None if (x := list(filter(lambda x: (x.tag == mediatag), item))) == [] else Media(x[0])
         )
+        self.metadata = {}

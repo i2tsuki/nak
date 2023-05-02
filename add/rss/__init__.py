@@ -8,7 +8,7 @@ from pytion import Notion
 from pytion.models import Block, Page, RichTextArray, LinkTo
 import click
 
-from typing import Dict, List, Iterable, Iterator
+from typing import Dict, List, Iterable, Iterator, Union
 from datetime import date, datetime, timedelta
 import json
 import os
@@ -35,7 +35,7 @@ def get_rss_articles(
     tree: Iterable[etree._Element] = iter([]),
     marker: Marker = Marker(),
     ago: int = 0,
-) -> List[Item]:
+) -> Union[str, List[Item]]:
     articles: List[Item] = []
 
     start: datetime = datetime.combine(date.today(), datetime.min.time()) - timedelta(days=ago)
@@ -44,9 +44,6 @@ def get_rss_articles(
         if channel.tag == "channel":
             if (title_element := list(filter(lambda x: (x.tag == "title"), channel))) != []:
                 title: str = title_element[0].text or ""
-                # When a title is not include in the `marker.obj` dict
-                if title not in marker.obj:
-                    marker.obj[title] = {}
             else:
                 sys.stderr.write("invalid rss format\n")
                 sys.exit(1)
@@ -54,13 +51,12 @@ def get_rss_articles(
             for item in items:
                 i: Item = Item(item)
                 if i.pubdate.timestamp() > start.timestamp() and (i.title not in marker.obj[title]):
-                    marker.obj[title][i.title] = {}
                     articles.append(i)
         else:
             sys.stderr.write("invalid rss format\n")
             sys.exit(1)
 
-    return articles
+    return title, articles
 
 
 @click.command()
@@ -115,9 +111,12 @@ def rss(select, from_days, no_mixed, no_catch_up):
     for feed in target.rss:
         resp: requests.Response = requests.get(url=target.rss[feed])
         tree: Iterable[etree._Element] = etree.fromstring(resp.content)
+        title, rss_articles = get_rss_articles(tree=tree, marker=marker, ago=from_days)
+        for article in rss_articles:
+            article.metadata = {"feed_title": title}
         articles.extend(
             sorted(
-                get_rss_articles(tree=tree, marker=marker, ago=from_days),
+                rss_articles,
                 key=lambda x: x.pubdate,
             )
         )
@@ -174,6 +173,13 @@ def rss(select, from_days, no_mixed, no_catch_up):
                 {"type": "plain_text", "plain_text": item.description},
             ]
             blocks.extend([Block.create(RichTextArray(array))])
+
+        # Mark an item in Marker
+        # When a title is not include in the `marker.obj` dict
+        if title not in marker.obj:
+            marker.obj[item.metadata["feed_title"]] = {}
+            marker.obj[item.metadata["feed_title"]][item.title] = {}
+
     page.block_append(blocks=blocks)
 
     marker.update()
