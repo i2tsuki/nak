@@ -178,7 +178,7 @@ def rss(select, from_days, no_mixed, no_catch_up):
         # When a title is not include in the `marker.obj` dict
         if title not in marker.obj:
             marker.obj[item.metadata["feed_title"]] = {}
-            marker.obj[item.metadata["feed_title"]][item.title] = {}
+        marker.obj[item.metadata["feed_title"]][item.title] = {}
 
     page.block_append(blocks=blocks)
 
