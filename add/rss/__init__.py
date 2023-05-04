@@ -70,6 +70,14 @@ def get_rss_articles(
     type=int,
     help="Output since how many days ago.",
 )
+@click.option(
+    "--items",
+    nargs=1,
+    default=20,
+    required=False,
+    type=int,
+    help="Number of the output items.",
+)
 # Not mix each RSS feed or not
 @click.option(
     "--no-mixed",
@@ -87,15 +95,7 @@ def get_rss_articles(
     type=bool,
     help="Do not show catch-up images."
 )
-@click.option(
-    "--items",
-    nargs=1,
-    default=20,
-    required=False,
-    type=int,
-    help="Number of the output items."
-)
-def rss(select, from_days, no_mixed, no_catch_up):
+def rss(select, from_days, items, no_mixed, no_catch_up):
     """Add RSS Feed content to Notion."""
     now: datetime = datetime.now()
     marker = Marker(file="marker.json")
